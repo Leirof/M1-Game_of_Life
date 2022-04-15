@@ -14,7 +14,7 @@ def clearConsole():
         command = 'cls'
     os.system(command)
 
-@jit(nopython=True)
+# @jit(nopython=True)
 def next_cell(grid, x, y):
     if aliveNeighbours(grid,x,y) == 3:
         return True
@@ -22,39 +22,39 @@ def next_cell(grid, x, y):
         return grid[x,y]
     return False
 
-@jit(nopython=True)
+# @jit(nopython=True)
 def next_grid(grid):
-    newGrid = empty_like(grid).astype('bool')
+    newGrid = empty_like(grid)
     for row in range(len(grid)):
         for column in range(len(grid[row])):
             newGrid[row,column] = next_cell(grid, row, column)
     return newGrid
 
 # @jit(nopython=True,parallel=True)
-def detect_stable_pattern(grid, evolution, i, period=10, verbose = False):
+def detect_stable_pattern(grid, evolution, i, period=1000, verbose = False):
     stable_pattern = False
     for j in range(min(i,period)):
             if (grid == evolution[i-j]).all():
                 stable_pattern = True
-                if j==0 and verbose: print("\nStable point reached")
+                if j==0 and verbose: print("Stable point reached")
                 if j!=0 and verbose: print(f"Periodic stable point reached with period {j}")
                 break
     return stable_pattern
 
 # @jit(nopython=True)
-def start_gol(grid = random.choice(a=[False, True], size=(10, 10), p=[0.5, 0.5]), steps = 100, verbose = False):
-    grid.astype('bool')
+def start_gol(grid = random.choice(a=[False, True], size=(1000, 1000), p=[0.5, 0.5]),steps = 1000, verbose = False):
+    grid.astype('int')
     evolution = List()
     evolution.append(grid)
     for i in range(Steps-1):
-        if verbose and i%10 == 0: print(f"Running Game of Life... Step: {i} / {Steps}", end='\r')
+        if verbose and i%10 == 0: print(f"Running Game of Life... Step: {i} / {Steps}")
         
         newGrid = next_grid(grid)
         evolution.append(newGrid)
         if detect_stable_pattern(newGrid,evolution,i,verbose=True): break
         
         grid = newGrid
-    print("Running Game of Life... Done.")
+    print(f"Running Game of Life... Done.")
     return evolution
 
 
@@ -67,38 +67,46 @@ if __name__ == "__main__":
     Steps = 1000
 
     InitialGrid = random.choice(a=[False, True], size=(GridSize, GridSize), p=[0.5, 0.5])
+    # InitialGrid = zeros([GridSize,GridSize])
+    # structure = loadtxt("structure/u.npy")
+    # sizeX, sizeY = structure.shape
+    # posX = 23
+    # posY = 23
+    # InitialGrid[posX:posX+sizeX,posY:posY+sizeY] = structure
+    
+
+    # evolution = empty([Steps,GridSize,GridSize])
+    # evolution[0] = InitialGrid
     grid = InitialGrid
+
+    # ims is a list of lists, each row is a list of artists to draw in the
+    # current frame; here we are just animating one artist, the image, in
+    # each frame
     ims = []
     loading = ["/","-","\\","|"]
 
     start = time.time()
     evolution = array(start_gol(grid, Steps, verbose = True),dtype=bool)
+    # for i in range(Steps-1):
+    #     if i%10 == 0:
+    #         # clearConsole()
+    #         print(f"Computing evolution... Step: {i} / {Steps}", end="\r")
+    #     im = ax.imshow(grid, animated=True)
+    #     if i == 0:
+    #         ax.imshow(grid)  # show an initial one first
+    #     ims.append([im])
+    #     if sum(grid) == 0:
+    #         print("Every cells was destroyed")
+    #         break
+    #     newGrid = next_grid(grid)
+    #     if (newGrid == grid).all():
+    #         print("Stable point reached")
+    #         break
+    #     grid = newGrid
+    #     evolution[i+1] = grid
+    # print(f"Computing evolution... Done.")
     end = time.time()
     print("Elapsed (with compilation) = %s" % (end - start))
-
-    # __________________________________________________
-    # Analysis
-
-    vitality = zeros([GridSize,GridSize])
-    generations = zeros([GridSize,GridSize])
-    evolution_int = evolution.astype('int')
-    for i,v in enumerate(evolution_int):
-        vitality += v
-        if i > 0: generations += abs(evolution_int[i] - evolution_int[i-1])
-
-    x = arange(GridSize)
-    y = arange(GridSize)
-    plt.figure()
-    plt.pcolor(x,y,vitality, shading='auto', cmap="CMRmap")
-    plt.colorbar(label='Total living time of cell')
-    plt.title("Vitality")
-
-    plt.figure()
-    plt.pcolor(x,y,generations, shading='auto', cmap="CMRmap")
-    plt.colorbar(label='Number of state changes')
-    plt.title("Generations")
-    plt.show()
-
 
     # __________________________________________________
     # Saving results
@@ -123,7 +131,7 @@ if __name__ == "__main__":
     
     l = len(evolution)
     for i, frame in enumerate(evolution):
-        if i%10 == 0 : print(f"Saving... Step: {i} / {l}", end="\r")
+        if i%10 == 0 : print(f"Saving... Step: {i} / {l}")
         savetxt(f"results/simulation_{simulationNumber}/GridEvolution/{i}.numpy", frame, fmt="%i")
     
     print(f"Saving... Done.")
