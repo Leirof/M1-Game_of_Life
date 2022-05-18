@@ -36,8 +36,8 @@ def detect_stable_pattern(grid, evolution, i, period=10, verbose = False):
     for j in range(min(i,period)):
             if (grid == evolution[i-j]).all():
                 stable_pattern = True
-                if j==0 and verbose: print("\nStable point reached")
-                if j!=0 and verbose: print(f"Periodic stable point reached with period {j}")
+                if j==0 and verbose: print("\n   -> Stable point reached")
+                if j!=0 and verbose: print(f"\n   -> Periodic stable point reached with period {j}")
                 break
     return stable_pattern
 
@@ -46,24 +46,27 @@ def start_gol(grid = random.choice(a=[False, True], size=(10, 10), p=[0.5, 0.5])
     grid.astype('bool')
     evolution = List()
     evolution.append(grid)
-    for i in range(Steps-1):
-        if verbose and i%10 == 0: print(f"Running Game of Life... Step: {i} / {Steps}", end='\r')
+    for i in range(steps-1):
+        if verbose and i%10 == 0: print(f"👾 Running Game of Life... Step: {i} / {steps} ({i/steps*100:.0f} %)", end='\r')
         
         newGrid = next_grid(grid)
         evolution.append(newGrid)
-        if detect_stable_pattern(newGrid,evolution,i,verbose=True): break
+        if detect_stable_pattern(newGrid,evolution,i,verbose=True): return evolution
         
         grid = newGrid
-    print("Running Game of Life... Done.")
+    print(f"👾 Running Game of Life... Step: {steps}/{steps} (100 %) ✅")
     return evolution
 
 
 if __name__ == "__main__":
+
     #clearConsole()
+     
+    print(f"\n👾 Starting Game of Life...",end='\r')
 
     fig, ax = plt.subplots()
 
-    GridSize = 501
+    GridSize = 51
     Steps = 1000
 
     InitialGrid = random.choice(a=[False, True], size=(GridSize, GridSize), p=[0.5, 0.5])
@@ -74,64 +77,71 @@ if __name__ == "__main__":
     start = time.time()
     evolution = array(start_gol(grid, Steps, verbose = True),dtype=bool)
     end = time.time()
-    print("Elapsed (with compilation) = %s" % (end - start))
+    print("\n⌚ Elapsed (with compilation) = %s s" % round((end - start),2))
 
     # __________________________________________________
     # Analysis
+
+    print("\n🔎 Analyzing...", end='\r')
 
     vitality = zeros([GridSize,GridSize])
     generations = zeros([GridSize,GridSize])
     evolution_int = evolution.astype('int')
     for i,v in enumerate(evolution_int):
+        if i%10 == 0 : print(f"🔎 Analyzing... Step: {i} / {Steps} ({i/Steps*100:.0f} %)", end='\r')
         vitality += v
         if i > 0: generations += abs(evolution_int[i] - evolution_int[i-1])
 
     x = arange(GridSize)
     y = arange(GridSize)
-    plt.figure()
+    plt.figure(figsize=(10,10))
+    plt.subplot(1,2,1)
     plt.pcolor(x,y,vitality, shading='auto', cmap="CMRmap")
     plt.colorbar(label='Total living time of cell')
     plt.title("Vitality")
 
-    plt.figure()
+    plt.subplot(1,2,2)
     plt.pcolor(x,y,generations, shading='auto', cmap="CMRmap")
     plt.colorbar(label='Number of state changes')
     plt.title("Generations")
-    plt.show()
 
+    print(f"🔎 Analyzing... Step: {Steps}/{Steps} (100 %) ✅")
 
     # __________________________________________________
     # Saving results
 
-    print("Done.\nSaving Results...")
+    print("\n📀 Saving results...", end="\r")
 
     simulationNumber = 0
 
     if not os.path.isdir("results"): os.makedirs("results")
 
+    # Determining the number (identifier) of the simulation
     if os.path.isfile("results/manifest.dat"):
         for line in open("results/manifest.dat", "r"):
             simulationNumber = int(line) + 1
             break
-
     with open("results/manifest.dat", "w+") as f:
-            f.write(str(simulationNumber))
-
+        f.write(str(simulationNumber))
+            
     os.makedirs(f"results/simulation_{simulationNumber}/GridEvolution")
+
+    """
     savetxt(f"results/simulation_{simulationNumber}/InitialGrid.numpy", grid, fmt="%i")
     savetxt(f"results/simulation_{simulationNumber}/SimulationProperties.numpy", evolution.shape)
+    """
+
+    file = f"results/simulation_{simulationNumber}/GridEvolution.txt"
+
+    save_evolution(file, evolution)
     
-    l = len(evolution)
-    for i, frame in enumerate(evolution):
-        if i%10 == 0 : print(f"Saving... Step: {i} / {l}", end="\r")
-        savetxt(f"results/simulation_{simulationNumber}/GridEvolution/{i}.numpy", frame, fmt="%i")
-    
-    print(f"Saving... Done.")
+    print(f"📀  Saving results... Step: {len(evolution)}/{len(evolution)} (100 %) ✅\n   -> Saved in {file}")
 
 
-    print("Done.\nGenerating animation...")
+    print("\n🎞️ Generating animation...", end="\r")
     ani = animation.ArtistAnimation(fig, ims, interval=50, blit=True,
                                     repeat_delay=1000)
     ani.save(f"results/simulation_{simulationNumber}/evolution.mp4")
-    print("Done.")
+    print("🎞️ Generating animation... ✅")
+    print(" ")
     plt.show()
