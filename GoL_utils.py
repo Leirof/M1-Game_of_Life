@@ -80,15 +80,9 @@ def save_evolution(file, evolution):
     dir = os.path.split(file)[0]
     if not os.path.isdir(dir): os.makedirs(dir)
 
-    L,N,M = shape(evolution)
-    with open(file, "a") as f:
-        f.write(f"# Evolution of a {N}*{M} matrix over {L} steps."+"\n")
-        f.write(f"# Step\tGrid flattened in hexadecimal"+"\n")
-        for i, frame in enumerate(evolution):
-            if i%10 == 0 : print(f"📀 Saving results... Step: {i} / {L} ({round(i/L*100)} %)", end="\r")
-            f.write(f"{str(i)}\t{grid_to_name(frame).split('_')[1]}\n")
+    savez_compressed(file, evolution.astype(bool))
 
-@jit(nopython=True)
+# @jit(nopython=True)
 def compact_hexa(hexa):
     for _ in range(len(hexa)):
         if hexa[0] == "0": hexa = hexa[1:]
@@ -109,7 +103,7 @@ def compact_hexa(hexa):
         hexa = hexa[:i-cpt] + f"[{cpt}]"
     return hexa
 
-@jit(nopython=True)
+# @jit(nopython=True)
 def uncompact_hexa(hexa):
     res = ""
     i=0

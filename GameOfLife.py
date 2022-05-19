@@ -123,20 +123,12 @@ if __name__ == "__main__":
             break
     with open("results/manifest.dat", "w+") as f:
         f.write(str(simulationNumber))
-            
-    os.makedirs(f"results/simulation_{simulationNumber}/GridEvolution")
 
-    """
-    savetxt(f"results/simulation_{simulationNumber}/InitialGrid.numpy", grid, fmt="%i")
-    savetxt(f"results/simulation_{simulationNumber}/SimulationProperties.numpy", evolution.shape)
-    """
-
-    file = f"results/simulation_{simulationNumber}/GridEvolution.txt"
+    file = f"results/simulation_{simulationNumber}/GridEvolution"
 
     save_evolution(file, evolution)
     
-    print(f"📀  Saving results... Step: {len(evolution)}/{len(evolution)} (100 %) ✅\n   -> Saved in {file}")
-
+    print(f"📀  Saving results... ✅\n   -> Saved in {file}.npy")
 
     print("\n🎞️ Generating animation...", end="\r")
     ani = animation.ArtistAnimation(fig, ims, interval=50, blit=True,
