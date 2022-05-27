@@ -53,12 +53,8 @@ def grid_to_hex(grid, grid_shape=None):
     return r
 
 def int_to_grid(i, grid_shape):
-    print("Int =",i)
     res = zeros(grid_shape[0]*grid_shape[1]).astype(bool)
-    print("Bin =",len(bin(i)))
-    print("Len(res) =",len(res))
     b = array(list(bin(i))[2:]).astype(bool)
-    print("Len(bin) =",len(b))
     res[-len(b):] = b
     return res.reshape(grid_shape)
 
@@ -73,14 +69,7 @@ def grid_to_name(grid):
 def name_to_grid(name):
     tmp = name.split("_")
     shape = tmp[0].split("x")
-    print("Hexa =",tmp[1])
     return hex_to_grid(tmp[1],[int(shape[0]),int(shape[1])])
-
-def save_evolution(file, evolution):
-    dir = os.path.split(file)[0]
-    if not os.path.isdir(dir): os.makedirs(dir)
-
-    savez_compressed(file, evolution.astype(bool))
 
 # @jit(nopython=True)
 def compact_hexa(hexa):
