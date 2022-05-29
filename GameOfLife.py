@@ -51,66 +51,63 @@ def start_gol(grid = random.choice(a=[False, True], size=(10, 10), p=[0.5, 0.5])
         
         newGrid = next_grid(grid)
         evolution.append(newGrid)
-        if detect_stable_pattern(newGrid,evolution,i,verbose=True): return evolution
+        if detect_stable_pattern(newGrid,evolution,i,verbose=verbose): return evolution
         
         grid = newGrid
-    print(f"👾 Running Game of Life... Step: {steps}/{steps} (100 %) ✅")
+    if verbose: print(f"👾 Running Game of Life... Step: {steps}/{steps} (100 %) ✅")
     return evolution
 
-
-if __name__ == "__main__":
+def run():
 
     #clearConsole()
+    verbose = True
      
-    print(f"\n👾 Starting Game of Life...",end='\r')
-
-    fig, ax = plt.subplots()
+    if verbose: print(f"\n👾 Starting Game of Life...",end='\r')
 
     GridSize = 51
     Steps = 1000
 
     InitialGrid = random.choice(a=[False, True], size=(GridSize, GridSize), p=[0.5, 0.5])
     grid = InitialGrid
-    ims = []
     loading = ["/","-","\\","|"]
 
     start = time.time()
-    evolution = array(start_gol(grid, Steps, verbose = True),dtype=bool)
+    evolution = array(start_gol(grid, Steps, verbose = verbose),dtype=bool)
     end = time.time()
-    print("\n⌚ Elapsed (with compilation) = %s s" % round((end - start),2))
+    if verbose: print("\n⌚ Elapsed (with compilation) = %s s" % round((end - start),2))
 
     # __________________________________________________
     # Analysis
 
-    print("\n🔎 Analyzing...", end='\r')
+    if verbose: print("\n🔎 Analyzing...", end='\r')
 
     vitality = zeros([GridSize,GridSize])
     generations = zeros([GridSize,GridSize])
     evolution_int = evolution.astype('int')
     for i,v in enumerate(evolution_int):
-        if i%10 == 0 : print(f"🔎 Analyzing... Step: {i} / {Steps} ({i/Steps*100:.0f} %)", end='\r')
+        if i%10 == 0 and verbose: print(f"🔎 Analyzing... Step: {i} / {Steps} ({i/Steps*100:.0f} %)", end='\r')
         vitality += v
         if i > 0: generations += abs(evolution_int[i] - evolution_int[i-1])
 
-    x = arange(GridSize)
-    y = arange(GridSize)
-    plt.figure(figsize=(10,10))
-    plt.subplot(1,2,1)
-    plt.pcolor(x,y,vitality, shading='auto', cmap="CMRmap")
-    plt.colorbar(label='Total living time of cell')
-    plt.title("Vitality")
+    # x = arange(GridSize)
+    # y = arange(GridSize)
+    # plt.figure(figsize=(10,10))
+    # plt.subplot(1,2,1)
+    # plt.pcolor(x,y,vitality, shading='auto', cmap="CMRmap")
+    # plt.colorbar(label='Total living time of cell')
+    # plt.title("Vitality")
 
-    plt.subplot(1,2,2)
-    plt.pcolor(x,y,generations, shading='auto', cmap="CMRmap")
-    plt.colorbar(label='Number of state changes')
-    plt.title("Generations")
+    # plt.subplot(1,2,2)
+    # plt.pcolor(x,y,generations, shading='auto', cmap="CMRmap")
+    # plt.colorbar(label='Number of state changes')
+    # plt.title("Generations")
 
-    print(f"🔎 Analyzing... Step: {Steps}/{Steps} (100 %) ✅")
+    if verbose: print(f"🔎 Analyzing... Step: {Steps}/{Steps} (100 %) ✅")
 
     # __________________________________________________
     # Saving results
 
-    print("\n📀 Saving results...", end="\r")
+    if verbose: print("\n📀 Saving results...", end="\r")
 
     simulationNumber = 0
 
@@ -128,12 +125,18 @@ if __name__ == "__main__":
 
     save_evolution(file, evolution)
     
-    print(f"📀  Saving results... ✅\n   -> Saved in {file}.npy")
+    if verbose: print(f"📀  Saving results... ✅\n   -> Saved in {file}.npy")
 
-    print("\n🎞️ Generating animation...", end="\r")
-    ani = animation.ArtistAnimation(fig, ims, interval=50, blit=True,
-                                    repeat_delay=1000)
-    ani.save(f"results/simulation_{simulationNumber}/evolution.mp4")
-    print("🎞️ Generating animation... ✅")
-    print(" ")
-    plt.show()
+    if verbose: print("\n🎞️ Generating animation...", end="\r")
+    # fig, ax = plt.subplots()
+    # ims = []
+    # ani = animation.ArtistAnimation(fig, ims, interval=50, blit=True,
+    #                                 repeat_delay=1000)
+    # ani.save(f"results/simulation_{simulationNumber}/evolution.mp4")
+    if verbose: print("🎞️ Generating animation... ✅")
+    if verbose: print(" ")
+    if verbose: plt.show()
+
+
+if __name__ == "__main__":
+    run()
