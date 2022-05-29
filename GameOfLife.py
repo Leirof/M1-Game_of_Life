@@ -6,14 +6,15 @@ from GoL_utils import *
 import time
 from numba import jit
 from numba.typed import List
+import analyze
 
-
-def clearConsole():
-    command = 'clear'
-    if os.name in ('nt', 'dos'):  # If Machine is running on Windows, use cls
-        command = 'cls'
-    os.system(command)
-
+#   _    _ _   _ _     
+#  | |  | | | (_) |    
+#  | |  | | |_ _| |___ 
+#  | |  | | __| | / __|
+#  | |__| | |_| | \__ \
+#   \____/ \__|_|_|___/
+                
 @jit(nopython=True)
 def next_cell(grid, x, y):
     if aliveNeighbours(grid,x,y) == 3:
@@ -38,11 +39,18 @@ def detect_stable_pattern(grid, evolution, i, period=10, verbose = False):
                 stable_pattern = True
                 if j==0 and verbose: print("\n   -> Stable point reached")
                 if j!=0 and verbose: print(f"\n   -> Periodic stable point reached with period {j}")
-                break
-    return stable_pattern
+                return stable_pattern, j
+    return stable_pattern, None
 
+#    _____               
+#   / ____|              
+#  | |     ___  _ __ ___ 
+#  | |    / _ \| '__/ _ \
+#  | |___| (_) | | |  __/
+#   \_____\___/|_|  \___|
+                       
 # @jit(nopython=True)
-def start_gol(grid = random.choice(a=[False, True], size=(10, 10), p=[0.5, 0.5]), steps = 100, verbose = False):
+def start(grid = random.choice(a=[False, True], size=(10, 10), p=[0.5, 0.5]), steps = 100, verbose = False):
     grid.astype('bool')
     evolution = List()
     evolution.append(grid)
@@ -51,35 +59,55 @@ def start_gol(grid = random.choice(a=[False, True], size=(10, 10), p=[0.5, 0.5])
         
         newGrid = next_grid(grid)
         evolution.append(newGrid)
-        if detect_stable_pattern(newGrid,evolution,i,verbose=verbose): return evolution
+        stable, period = detect_stable_pattern(newGrid,evolution,i,verbose=verbose)
+        if stable:
+            for k in range(10):
+                for l in range(period):
+                    evolution.append(evolution[l-period])
+            return evolution
         
         grid = newGrid
     if verbose: print(f"👾 Running Game of Life... Step: {steps}/{steps} (100 %) ✅")
     return evolution
 
-def run():
-
-    #clearConsole()
-    verbose = True
+#   __  __       _       
+#  |  \/  |     (_)      
+#  | \  / | __ _ _ _ __  
+#  | |\/| |/ _` | | '_ \ 
+#  | |  | | (_| | | | | |
+#  |_|  |_|\__,_|_|_| |_|
+                       
+if __name__ == "__main__":
      
-    if verbose: print(f"\n👾 Starting Game of Life...",end='\r')
+    print(f"\n👾 Starting Game of Life...",end='\r')
+
+    #  __________________________________________________
+    # Config
 
     GridSize = 51
     Steps = 1000
-
     InitialGrid = random.choice(a=[False, True], size=(GridSize, GridSize), p=[0.5, 0.5])
+
+    # __________________________________________________
+    # Initialization
+
     grid = InitialGrid
     loading = ["/","-","\\","|"]
 
-    start = time.time()
-    evolution = array(start_gol(grid, Steps, verbose = verbose),dtype=bool)
+    # __________________________________________________
+    # Run
+
+    start_time = time.time()
+    evolution = array(start(grid, Steps, verbose = True),dtype=bool)
     end = time.time()
-    if verbose: print("\n⌚ Elapsed (with compilation) = %s s" % round((end - start),2))
+    print("\n⌚ Elapsed (with compilation) = %s s" % round((end - start_time),2))
 
     # __________________________________________________
     # Analysis
 
-    if verbose: print("\n🔎 Analyzing...", end='\r')
+    """Compute the living time and the number of generations for each cell"""
+
+    print("\n🔎 Analyzing...", end='\r')
 
     vitality = zeros([GridSize,GridSize])
     generations = zeros([GridSize,GridSize])
@@ -123,20 +151,16 @@ def run():
 
     file = f"results/simulation_{simulationNumber}/GridEvolution"
 
-    save_evolution(file, evolution)
+    dir = os.path.split(file)[0]
+    if not os.path.isdir(dir): os.makedirs(dir)
+
+    savez_compressed(file, evolution.astype(bool))
     
     if verbose: print(f"📀  Saving results... ✅\n   -> Saved in {file}.npy")
 
-    if verbose: print("\n🎞️ Generating animation...", end="\r")
-    # fig, ax = plt.subplots()
-    # ims = []
-    # ani = animation.ArtistAnimation(fig, ims, interval=50, blit=True,
-    #                                 repeat_delay=1000)
-    # ani.save(f"results/simulation_{simulationNumber}/evolution.mp4")
-    if verbose: print("🎞️ Generating animation... ✅")
-    if verbose: print(" ")
-    if verbose: plt.show()
+    # __________________________________________________
+    # Animation
 
+    analyze.generate_animation(evolution, save_as=f"results/simulation_{simulationNumber}/evolution.mp4", verbose = True)
 
-if __name__ == "__main__":
-    run()
+    plt.show()
