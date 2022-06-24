@@ -7,6 +7,7 @@ import time
 from numba import jit
 from numba.typed import List
 import analyze
+import utils.archive as archive
 
 #   _    _ _   _ _     
 #  | |  | | | (_) |    
@@ -69,98 +70,3 @@ def start(grid = random.choice(a=[False, True], size=(10, 10), p=[0.5, 0.5]), st
         grid = newGrid
     if verbose: print(f"👾 Running Game of Life... Step: {steps}/{steps} (100 %) ✅")
     return evolution
-
-#   __  __       _       
-#  |  \/  |     (_)      
-#  | \  / | __ _ _ _ __  
-#  | |\/| |/ _` | | '_ \ 
-#  | |  | | (_| | | | | |
-#  |_|  |_|\__,_|_|_| |_|
-                       
-if __name__ == "__main__":
-     
-    print(f"\n👾 Starting Game of Life...",end='\r')
-
-    #  __________________________________________________
-    # Config
-
-    GridSize = 51
-    Steps = 1000
-    InitialGrid = random.choice(a=[False, True], size=(GridSize, GridSize), p=[0.5, 0.5])
-
-    # __________________________________________________
-    # Initialization
-
-    grid = InitialGrid
-    loading = ["/","-","\\","|"]
-
-    # __________________________________________________
-    # Run
-
-    start_time = time.time()
-    evolution = array(start(grid, Steps, verbose = True),dtype=bool)
-    end = time.time()
-    print("\n⌚ Elapsed (with compilation) = %s s" % round((end - start_time),2))
-
-    # __________________________________________________
-    # Analysis
-
-    """Compute the living time and the number of generations for each cell"""
-
-    print("\n🔎 Analyzing...", end='\r')
-
-    vitality = zeros([GridSize,GridSize])
-    generations = zeros([GridSize,GridSize])
-    evolution_int = evolution.astype('int')
-    for i,v in enumerate(evolution_int):
-        if i%10 == 0 and verbose: print(f"🔎 Analyzing... Step: {i} / {Steps} ({i/Steps*100:.0f} %)", end='\r')
-        vitality += v
-        if i > 0: generations += abs(evolution_int[i] - evolution_int[i-1])
-
-    # x = arange(GridSize)
-    # y = arange(GridSize)
-    # plt.figure(figsize=(10,10))
-    # plt.subplot(1,2,1)
-    # plt.pcolor(x,y,vitality, shading='auto', cmap="CMRmap")
-    # plt.colorbar(label='Total living time of cell')
-    # plt.title("Vitality")
-
-    # plt.subplot(1,2,2)
-    # plt.pcolor(x,y,generations, shading='auto', cmap="CMRmap")
-    # plt.colorbar(label='Number of state changes')
-    # plt.title("Generations")
-
-    if verbose: print(f"🔎 Analyzing... Step: {Steps}/{Steps} (100 %) ✅")
-
-    # __________________________________________________
-    # Saving results
-
-    if verbose: print("\n📀 Saving results...", end="\r")
-
-    simulationNumber = 0
-
-    if not os.path.isdir("results"): os.makedirs("results")
-
-    # Determining the number (identifier) of the simulation
-    if os.path.isfile("results/manifest.dat"):
-        for line in open("results/manifest.dat", "r"):
-            simulationNumber = int(line) + 1
-            break
-    with open("results/manifest.dat", "w+") as f:
-        f.write(str(simulationNumber))
-
-    file = f"results/simulation_{simulationNumber}/GridEvolution"
-
-    dir = os.path.split(file)[0]
-    if not os.path.isdir(dir): os.makedirs(dir)
-
-    savez_compressed(file, evolution.astype(bool))
-    
-    if verbose: print(f"📀  Saving results... ✅\n   -> Saved in {file}.npy")
-
-    # __________________________________________________
-    # Animation
-
-    analyze.generate_animation(evolution, save_as=f"results/simulation_{simulationNumber}/evolution.mp4", verbose = True)
-
-    plt.show()

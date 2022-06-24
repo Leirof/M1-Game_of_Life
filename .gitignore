@@ -2,3 +2,5 @@ __pycache__/
 .vscode/
 results/
 rsrc/
+archives/*/*/*
+!GridEvolution.npz
