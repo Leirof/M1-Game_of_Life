@@ -7,12 +7,22 @@ def tychonov_distance(c,k):
     midX,midY = c.shape
     midX = int(floor(midX/2)); midY = int(floor(midY/2))
 
+    l = []
+    # Break = False
     for i in range(midX):
         for j in range(midX):
-            if      c[ i, j] != k[ i, j] \
-                or  c[ i,-j] != k[ i,-j] \
-                or  c[-i, j] != k[-i, j] \
-                or  c[-i,-j] != k[-i,-j]:
-                break
+            if      c[midX + i, midX + j] != k[midX + i, midX + j] \
+                or  c[midX + i, midX - j] != k[midX + i, midX - j] \
+                or  c[midX - i, midX + j] != k[midX - i, midX + j] \
+                or  c[midX - i, midX - j] != k[midX - i, midX - j]:
+                l.append(max(i,j))
+    #             break
+    #     if Break: break
 
-    return 2**(-max(i,j))
+    # for i in range(midX):
+    #     for j in range(midX):
+    #         if c[i,j] != k[i,j]: l.append(max(i,j))
+
+    ck = min(l)
+
+    return 2**(-ck)
